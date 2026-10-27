@@ -12,19 +12,19 @@ from cooler_lcd.device import send
 UNIT = "omarchy-cooler-lcd-5131.service"
 
 
-def quote(value):
-    """Quote a literal systemd path, including its specifier escapes."""
+def unit_path(value):
+    """A literal path for WorkingDirectory=, which takes it unquoted."""
     value = str(value)
-    if any(ord(character) < 32 for character in value):
+    if not value.startswith("/") or any(ord(c) < 32 or c in '\\"' for c in value):
         raise ValueError("Invalid installation path.")
-    return '"' + value.replace("\\", "\\\\").replace('"', '\\"').replace("%", "%%") + '"'
+    return value.replace("%", "%%")
 
 
 def unit_content(source):
     return "\n".join([
         "[Unit]", "Description=Omarchy Cooler LCD 5131 — 5131:2007 HID display",
         "After=graphical-session.target", "PartOf=graphical-session.target", "",
-        "[Service]", "Type=simple", "WorkingDirectory=" + quote(source),
+        "[Service]", "Type=simple", "WorkingDirectory=" + unit_path(source),
         "ExecStart=/usr/bin/python3 -B -m cooler_lcd",
         "Restart=on-failure", "RestartSec=3", "UMask=0077",
         "NoNewPrivileges=true", "ProtectSystem=strict", "ProtectHome=read-only",

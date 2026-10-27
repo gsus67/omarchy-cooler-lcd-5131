@@ -66,10 +66,13 @@ class BootstrapTests(unittest.TestCase):
         self.assertNotIn("PrivateDevices=true", content)
         self.assertNotIn("User=root", content)
 
-    def test_unit_paths_escape_quotes_backslashes_and_specifiers(self):
-        self.assertEqual(bootstrap.quote('/a b/"c"/d\\e%f'), '"/a b/\\"c\\"/d\\\\e%%f"')
-        with self.assertRaises(ValueError):
-            bootstrap.quote("/a\nb")
+    def test_unit_path_is_unquoted_with_escaped_specifiers(self):
+        # systemd rejects a quoted WorkingDirectory= as "not absolute".
+        self.assertEqual(bootstrap.unit_path("/a b/c%d"), "/a b/c%%d")
+        self.assertIn("WorkingDirectory=/", bootstrap.unit_content(ROOT))
+        for bad in ("/a\nb", 'relative', '/a"b', "/a\\b"):
+            with self.subTest(path=bad), self.assertRaises(ValueError):
+                bootstrap.unit_path(bad)
 
     def test_failed_systemctl_is_reported(self):
         with patch("bootstrap.subprocess.run", return_value=Mock(returncode=1, stderr="failed", stdout="")):

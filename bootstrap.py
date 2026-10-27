@@ -3,7 +3,6 @@
 import json
 import os
 from pathlib import Path
-import shlex
 import subprocess
 import sys
 
@@ -61,8 +60,7 @@ def ensure(source):
     run("systemctl", "--user", "enable", "--now", UNIT)
     # Pick up Python changes on a plugin update or a shell reload.
     run("systemctl", "--user", "restart", UNIT)
-    return {"ok": True, "needsSetup": send(None) == "no_permission",
-            "setupCommand": "sudo bash " + shlex.quote(str(source / "setup.sh"))}
+    return {"ok": True, "needsSetup": send(None) == "no_permission"}
 
 
 if __name__ == "__main__":

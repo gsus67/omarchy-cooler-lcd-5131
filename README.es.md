@@ -35,9 +35,11 @@ omarchy plugin add https://github.com/gsus67/omarchy-cooler-lcd-5131 --enable
 
 Al cargarse, el plugin instala y activa
 `~/.config/systemd/user/omarchy-cooler-lcd-5131.service`, apuntando a su checkout.
-Se ejecuta con tu usuario de escritorio. Nunca instala paquetes ni pide sudo.
+Se ejecuta con tu usuario de escritorio y nunca instala paquetes.
 
-Ejecuta el único paso privilegiado desde una terminal:
+La pantalla necesita un permiso que se da una sola vez y no se vuelve a pedir.
+Si falta, el plugin muestra una notificación: haz clic y escribe tu contraseña
+en la ventana de Omarchy. O ejecuta el mismo paso desde una terminal:
 
 ```sh
 sudo bash ~/.config/omarchy/plugins/io.github.gsus67.omarchy-cooler-lcd-5131/setup.sh
@@ -51,9 +53,7 @@ SUBSYSTEM=="hidraw", ATTRS{idVendor}=="5131", ATTRS{idProduct}=="2007", TAG+="ua
 ```
 
 El acceso corresponde a la sesión local activa; no se usan permisos de
-escritura global ni grupos adicionales. Reconecta el USB si hace falta. Al
-cargarse con un dispositivo sin permiso de escritura, el plugin envía una
-sola notificación con este comando de preparación.
+escritura global ni grupos adicionales. Reconecta el USB si hace falta.
 
 ## Qué recibe la pantalla
 

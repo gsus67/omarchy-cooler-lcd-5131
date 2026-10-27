@@ -35,14 +35,13 @@ class BootstrapTests(unittest.TestCase):
         self.assertTrue(all(item.args[:2] == ("systemctl", "--user") for item in run.call_args_list))
         self.assertEqual([path for path in self.config.rglob("*") if path.is_file()], [unit])
 
-    def test_permission_notification_includes_literal_setup_command(self):
+    def test_missing_permission_requests_notification(self):
         source = self.config.parent / "plugin's $literal % path"
         (source / "cooler_lcd").mkdir(parents=True)
         (source / "cooler_lcd/__main__.py").touch()
         with patch("bootstrap.run"), patch("bootstrap.send", return_value="no_permission") as send:
             result = bootstrap.ensure(source)
         self.assertTrue(result["needsSetup"])
-        self.assertEqual(shlex.split(result["setupCommand"]), ["sudo", "bash", str(source / "setup.sh")])
         send.assert_called_once_with(None)
 
     def test_accessible_or_absent_device_does_not_request_notification(self):

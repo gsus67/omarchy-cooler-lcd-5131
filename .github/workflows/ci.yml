@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Tests (Arch, like Omarchy)
+    runs-on: ubuntu-latest
+    container: archlinux:base-20261018.0.612668@sha256:52dfbd5afb23a220d5ee92dafcb4c788d96c026ed04179890c23adef4c897fa0
+    steps:
+      - name: Install test tools
+        run: |
+          for attempt in 1 2 3; do
+            pacman -Syu --noconfirm --needed python systemd && exit 0
+            sleep 15
+          done
+          exit 1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Python tests and QML security checks
+        run: python -m unittest discover -s tests -v
+      - name: Verify the generated user unit
+        run: |
+          mkdir -m 700 -p .checks/runtime
+          python -c 'from pathlib import Path; from bootstrap import unit_content; Path(".checks/omarchy-cooler-lcd-5131.service").write_text(unit_content(Path.cwd()))'
+          XDG_RUNTIME_DIR="$PWD/.checks/runtime" systemd-analyze --user verify .checks/omarchy-cooler-lcd-5131.service
+
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check all shell scripts
+        run: shellcheck ./*.sh
+
+  zizmor:
+    name: zizmor (workflow security)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Audit GitHub Actions workflows
+        run: pipx run zizmor==1.31.1 --offline --min-severity=medium .github/workflows
+
+  codeql:
+    name: CodeQL (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python, actions]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+          queries: security-extended
+      - uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          category: /language:${{ matrix.language }}

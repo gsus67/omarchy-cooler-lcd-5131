@@ -55,6 +55,11 @@ SUBSYSTEM=="hidraw", ATTRS{idVendor}=="5131", ATTRS{idProduct}=="2007", TAG+="ua
 El acceso corresponde a la sesión local activa; no se usan permisos de
 escritura global ni grupos adicionales. Reconecta el USB si hace falta.
 
+En una ASRock B840M-C también carga el driver `nct6775` y lo deja activo al
+arrancar con `/etc/modules-load.d/omarchy-cooler-lcd-5131.conf`, para poder leer
+el ventilador de CPU. Si ya diste el permiso antes, ejecuta el comando de arriba
+una vez más.
+
 ## Qué recibe la pantalla
 
 Cada segundo: temperatura de CPU y GPU en **°C**, uso %, frecuencia MHz,
@@ -63,7 +68,9 @@ y decide qué campos se ven. Los valores ausentes o ilegibles son **0**.
 
 - CPU: `k10temp` Tctl, paquete de `coretemp` o `zenpower`; uso desde `/proc/stat`,
   frecuencia desde cpufreq. Solo se usan ventiladores etiquetados explícitamente
-  como CPU. El consumo procede de hwmon de CPU o contadores RAPL de paquete legibles.
+  como CPU, más el conector medido de placas verificadas (ASRock B840M-C, que
+  necesita cargar el driver `nct6775`). El consumo procede de hwmon de CPU o
+  contadores RAPL de paquete legibles.
 - GPU: hwmon de `amdgpu` y `gpu_busy_percent`; `nvidia-smi` opcional para NVIDIA;
   lectura de sysfs de Intel `i915`/`xe` cuando existe. Se usa una GPU. Las RPM del
   ventilador NVIDIA no están disponibles y quedan en 0.
@@ -91,7 +98,7 @@ Para detenerla, usa `systemctl --user stop omarchy-cooler-lcd-5131.service`.
 
 Ejecuta con tu usuario de escritorio. El script desactiva el plugin, detiene y
 elimina la unidad de usuario y cualquier configuración antigua del plugin, y
-pide sudo solo para eliminar la regla udev. Después elimina el checkout:
+pide sudo solo para eliminar la regla udev y la carga del driver. Después elimina el checkout:
 
 ```sh
 bash ~/.config/omarchy/plugins/io.github.gsus67.omarchy-cooler-lcd-5131/uninstall.sh

@@ -7,6 +7,8 @@ import time
 
 from .protocol import Readings
 
+CPU_FAN_HEADERS = {("B840M-C", "nct6799"): "fan2"}
+
 
 def read_text(path):
     try:
@@ -107,8 +109,7 @@ class Sensors:
         self.previous_energy = None
         return 0
 
-    @staticmethod
-    def cpu_fan(hwmons):
+    def cpu_fan(self, hwmons):
         for path, _ in hwmons:
             for label_path in sorted(path.glob("fan*_label")):
                 label = read_text(label_path).lower().replace("_", " ")
@@ -116,7 +117,13 @@ class Sensors:
                     rpm = number(label_path.with_name(label_path.name.replace("_label", "_input")))
                     if rpm:
                         return rpm
-        return 0  # Unlabeled motherboard fans cannot safely be attributed to CPU.
+        # Super I/O drivers expose no fan labels; these headers were measured following CPU load.
+        board = read_text(self.sys / "class/dmi/id/board_name")
+        for path, name in hwmons:
+            fan = CPU_FAN_HEADERS.get((board, name))
+            if fan and not any(path.glob("fan*_label")):
+                return number(path / f"{fan}_input")
+        return 0  # Other unlabeled motherboard fans cannot safely be attributed to CPU.
 
     def gpu(self, hwmons, result):
         for driver in ("amdgpu", "i915", "xe"):

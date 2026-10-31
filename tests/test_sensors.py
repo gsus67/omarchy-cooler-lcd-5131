@@ -87,6 +87,31 @@ class SensorTests(unittest.TestCase):
         self.write(path / "fan3_input", 1234)
         self.assertEqual(self.sensors.sample().cpu_rpm, 1234)
 
+    def test_verified_board_unlabeled_header_is_cpu_fan(self):
+        self.write(self.sys / "class/dmi/id/board_name", "B840M-C")
+        self.hwmon(0, "nct6799", fan1_input=0, fan2_input=894, fan4_input=669)
+        self.assertEqual(self.sensors.sample().cpu_rpm, 894)
+
+    def test_cpu_header_is_not_assumed_on_other_boards(self):
+        self.write(self.sys / "class/dmi/id/board_name", "B650M PG Riptide")
+        self.hwmon(0, "nct6799", fan2_input=894)
+        self.assertEqual(self.sensors.sample().cpu_rpm, 0)
+
+    def test_verified_board_other_chip_is_not_assumed(self):
+        self.write(self.sys / "class/dmi/id/board_name", "B840M-C")
+        self.hwmon(0, "nct6798", fan2_input=894)
+        self.assertEqual(self.sensors.sample().cpu_rpm, 0)
+
+    def test_verified_board_labels_win_over_header(self):
+        self.write(self.sys / "class/dmi/id/board_name", "B840M-C")
+        self.hwmon(0, "nct6799", fan2_label="Pump Fan", fan2_input=2800)
+        self.assertEqual(self.sensors.sample().cpu_rpm, 0)
+
+    def test_verified_board_missing_header_reads_zero(self):
+        self.write(self.sys / "class/dmi/id/board_name", "B840M-C")
+        self.hwmon(0, "nct6799", fan4_input=669)
+        self.assertEqual(self.sensors.sample().cpu_rpm, 0)
+
     def test_readable_cpu_hwmon_power(self):
         self.hwmon(0, "zenpower", power1_input=65000000)
         self.assertEqual(self.sensors.sample().cpu_watts, 65)

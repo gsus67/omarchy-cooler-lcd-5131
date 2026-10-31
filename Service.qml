@@ -26,7 +26,7 @@ Item {
   }
 
   // Clicking the notification (its default action) opens the password prompt
-  // for the one-time udev rule.
+  // for the one-time setup.sh step.
   Process {
     id: notification
     command: ["notify-send", "--wait", "--action=default=Allow access", "--", "Omarchy Cooler LCD 5131",

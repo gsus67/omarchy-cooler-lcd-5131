@@ -55,6 +55,11 @@ SUBSYSTEM=="hidraw", ATTRS{idVendor}=="5131", ATTRS{idProduct}=="2007", TAG+="ua
 Access belongs to the active local session; no world-writable device mode or
 extra group is used. Reconnect USB if needed.
 
+On an ASRock B840M-C it also loads the `nct6775` driver and keeps it active at
+boot through `/etc/modules-load.d/omarchy-cooler-lcd-5131.conf`, so the CPU fan
+can be read. If you already granted the permission, run the command above once
+more.
+
 ## What the display receives
 
 Once per second: CPU and GPU temperature in **°C**, usage %, frequency MHz,
@@ -62,8 +67,10 @@ fan RPM, power W, and the local date and time. The firmware controls the layout
 and decides which fields are visible. Missing or unreadable values are **0**.
 
 - CPU: `k10temp` Tctl, `coretemp` package or `zenpower`; usage from `/proc/stat`,
-  frequency from cpufreq. Only explicitly CPU-labelled fans are used. Power
-  comes from readable CPU hwmon values or package RAPL counters.
+  frequency from cpufreq. Only explicitly CPU-labelled fans are used, plus the
+  measured header of verified boards (ASRock B840M-C, which needs the `nct6775`
+  driver loaded). Power comes from readable CPU hwmon values or package RAPL
+  counters.
 - GPU: `amdgpu` hwmon and `gpu_busy_percent`; optional `nvidia-smi` for NVIDIA;
   best-effort Intel `i915`/`xe` sysfs readings. One GPU is used. NVIDIA fan RPM
   is unavailable and remains 0.
@@ -91,7 +98,7 @@ To stop it, use `systemctl --user stop omarchy-cooler-lcd-5131.service`.
 
 Run as your desktop user. The script disables the plugin, stops and removes
 the user unit and any old plugin configuration, and asks for sudo only to
-remove the udev rule. Then remove the checkout:
+remove the udev rule and the driver entry. Then remove the checkout:
 
 ```sh
 bash ~/.config/omarchy/plugins/io.github.gsus67.omarchy-cooler-lcd-5131/uninstall.sh

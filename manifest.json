@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "io.github.gsus67.omarchy-cooler-lcd-5131",
   "name": "Omarchy Cooler LCD 5131",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "author": "gsus",
   "license": "GPL-3.0-or-later",
   "description": "CPU and GPU readings for 5131:2007 cooler displays using the 0x40 HID protocol.",
